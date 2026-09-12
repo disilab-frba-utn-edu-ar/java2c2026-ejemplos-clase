@@ -1,27 +1,39 @@
-# Java 2C 2026 - Ejemplos de Clase
+# Monolito tradicional
 
-Repositorio con los ejemplos de código practicados en las distintas clases de Java, segundo cuatrimestre de 2026.
+## Estructura del código
 
-## Estructura
-
-Cada branch del repositorio corresponde a uno de los ejemplos dados en clase.
-
-## Cómo clonar el repositorio y acceder a los ejemplos
-
-Para clonar el repositorio:
-
-```bash
-git clone <url-del-repositorio>
+```
+src/main/java/ar/edu/utn/frba/biblioteca/
+├── BibliotecaApplication.java
+├── DatosDeEjemplo.java        (carga usuarios/libros de ejemplo al arrancar)
+├── controller/                (UsuarioController, LibroController, PrestamoController)
+├── service/                   (UsuarioService, LibroService)
+├── repository/                (UsuarioRepository, LibroRepository, PrestamoRepository - en memoria)
+├── model/                     (Usuario, Libro, Prestamo)
+├── dto/                       (requests y responses)
+├── exception/                 (excepciones de negocio + manejador global)
+└── ejemplos/daovsrepository/  (LibroDao vs LibroRepository, no forma parte del flujo de la app)
 ```
 
-Para listar las branches disponibles y ver todos los ejemplos:
+## Cómo correr la app
 
 ```bash
-git branch -a
+mvn spring-boot:run
 ```
 
-Para acceder al ejemplo deseado, se debe cambiar a la branch correspondiente:
+La app levanta en `http://localhost:8080` y ya viene con 2 usuarios y 3 libros de ejemplo
+(uno de ellos, "Domain-Driven Design", a propósito con stock 0).
 
-```bash
-git checkout <nombre-de-la-branch>
-```
+## Endpoints
+
+| Método | Endpoint                   | Descripción                          |
+|--------|-----------------------------|---------------------------------------|
+| POST   | `/usuarios`                 | Crea un usuario                       |
+| GET    | `/usuarios`                 | Lista usuarios                        |
+| GET    | `/usuarios/{id}`            | Busca un usuario por id               |
+| POST   | `/libros`                   | Crea un libro                         |
+| GET    | `/libros`                   | Lista libros                          |
+| GET    | `/libros/{id}`              | Busca un libro por id                 |
+| POST   | `/prestamos`                | Crea un préstamo (valida stock)       |
+| POST   | `/prestamos/{id}/devolver`  | Devuelve un préstamo (repone stock)   |
+| GET    | `/prestamos`                | Lista préstamos                       |
