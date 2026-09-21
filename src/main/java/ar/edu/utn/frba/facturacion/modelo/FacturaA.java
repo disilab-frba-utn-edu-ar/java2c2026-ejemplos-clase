@@ -4,7 +4,7 @@ package ar.edu.utn.frba.facturacion.modelo;
  * Factura tipo A: emitida a un Responsable Inscripto.
  * El IVA se DISCRIMINA y se calcula al 21% sobre el neto.
  *
- * TODO PASO 2 (Records): convertir esta clase en un record.
+ * TODO PASO 1 (Records): convertir esta clase en un record.
  *   Un record es inmutable y genera constructor, getters, equals,
  *   hashCode y toString automaticamente. Ejemplo del objetivo:
  *

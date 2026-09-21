@@ -5,7 +5,7 @@ package ar.edu.utn.frba.facturacion.modelo;
  * Lleva IVA al 21%, pero NO se discrimina (va incluido en el precio final).
  * A los fines del calculo, el importe de IVA es el mismo 21% del neto.
  *
- * TODO PASO 2 (Records): convertir en record (ver FacturaA).
+ * TODO PASO 1 (Records): convertir en record (ver FacturaA).
  */
 public class FacturaB implements Factura {
 

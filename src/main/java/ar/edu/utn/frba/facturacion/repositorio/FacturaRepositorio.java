@@ -32,7 +32,7 @@ public class FacturaRepositorio {
     /**
      * Devuelve todas las facturas.
      *
-     * TODO PASO 5 (Streams): este metodo copia la lista con un for.
+     * TODO PASO 4 (Streams): este metodo copia la lista con un for.
      *   Se puede resolver con Streams:
      *       return facturas.stream().toList();
      */
@@ -47,7 +47,7 @@ public class FacturaRepositorio {
     /**
      * Busca una factura por numero.
      *
-     * TODO PASO 6 (Optional): hoy devuelve null si no existe, lo que
+     * TODO PASO 5 (Optional): hoy devuelve null si no existe, lo que
      *   obliga a quien la usa a acordarse de chequear el null.
      *   Migrar la firma a Optional<Factura> y resolver con Streams:
      *
@@ -69,7 +69,7 @@ public class FacturaRepositorio {
     /**
      * Devuelve las facturas de un tipo dado ("A", "B" o "C").
      *
-     * TODO PASO 5 (Streams): migrar el for + if a un filter de Streams:
+     * TODO PASO 4 (Streams): migrar el for + if a un filter de Streams:
      *       return facturas.stream()
      *               .filter(f -> f.getTipo().equals(tipo))
      *               .toList();

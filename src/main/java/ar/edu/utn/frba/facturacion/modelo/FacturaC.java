@@ -4,7 +4,7 @@ package ar.edu.utn.frba.facturacion.modelo;
  * Factura tipo C: emitida por un Monotributista (o Exento).
  * NO discrimina ni cobra IVA, por lo que el IVA es 0.
  *
- * TODO PASO 2 (Records): convertir en record (ver FacturaA).
+ * TODO PASO 1 (Records): convertir en record (ver FacturaA).
  */
 public class FacturaC implements Factura {
 

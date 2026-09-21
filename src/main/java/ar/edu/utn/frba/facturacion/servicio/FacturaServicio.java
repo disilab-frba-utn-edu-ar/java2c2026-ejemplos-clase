@@ -32,12 +32,12 @@ public class FacturaServicio {
     /**
      * Suma el IVA de todas las facturas.
      *
-     * TODO PASO 5 (Streams): reemplazar el for acumulador por:
+     * TODO PASO 4 (Streams): reemplazar el for acumulador por:
      *       return repositorio.buscarTodas().stream()
      *               .mapToDouble(Factura::calcularIva)
      *               .sum();
      *
-     * TODO PASO 3 (Pattern Matching): cuando el calculo del IVA salga
+     * TODO PASO 2 (Pattern Matching): cuando el calculo del IVA salga
      *   de las clases, aca se usara CalculadoraIva.calcular(f) en lugar
      *   de f.calcularIva().
      */
@@ -52,7 +52,7 @@ public class FacturaServicio {
     /**
      * Busca una factura por numero.
      *
-     * TODO PASO 6 (Optional): cuando el repositorio devuelva
+     * TODO PASO 5 (Optional): cuando el repositorio devuelva
      *   Optional<Factura>, este metodo puede propagarlo:
      *       return repositorio.buscarPorNumero(numero);
      *   y el controlador decide que responder si esta vacio.

@@ -59,7 +59,7 @@ public class FacturaControlador {
     /**
      * Busca una factura por numero.
      *
-     * TODO PASO 6 (Optional): cuando el servicio devuelva
+     * TODO PASO 5 (Optional): cuando el servicio devuelva
      *   Optional<Factura>, este metodo se vuelve mas expresivo:
      *
      *       return servicio.buscarPorNumero(numero)

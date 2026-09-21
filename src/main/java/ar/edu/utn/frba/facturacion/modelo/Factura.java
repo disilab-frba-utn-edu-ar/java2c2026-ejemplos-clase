@@ -8,7 +8,7 @@ package ar.edu.utn.frba.facturacion.modelo;
  * mediante POLIMORFISMO (cada clase pisa {@link #calcularIva()}).
  *
  * ============================================================
- * TODO PASO 4 (Sealed): convertir esta interface en SEALED y
+ * TODO PASO 3 (Sealed): convertir esta interface en SEALED y
  *   permitir SOLO las implementaciones conocidas, p. ej.:
  *
  *       public sealed interface Factura
@@ -31,7 +31,7 @@ public interface Factura {
     /**
      * Calcula el IVA de la factura.
      *
-     * TODO PASO 3 (Pattern Matching): una vez que A/B/C sean records,
+     * TODO PASO 2 (Pattern Matching): una vez que A/B/C sean records,
      *   este calculo NO va a vivir mas dentro de cada clase. Se va a
      *   resolver por fuera, con un switch + pattern matching sobre el
      *   tipo de factura (ver CONSIGNA.md, paso de pattern matching).
