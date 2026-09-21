@@ -14,7 +14,7 @@ package ar.edu.utn.frba.facturacion.modelo;
  *       public sealed interface Factura
  *               permits FacturaA, FacturaB, FacturaC { ... }
  *
- *   Ver la GUIA-DOCENTE.md para el detalle de cada paso.
+ *   Ver la CONSIGNA.md para el detalle de cada paso.
  * ============================================================
  */
 public interface Factura {
@@ -34,7 +34,7 @@ public interface Factura {
      * TODO PASO 3 (Pattern Matching): una vez que A/B/C sean records,
      *   este calculo NO va a vivir mas dentro de cada clase. Se va a
      *   resolver por fuera, con un switch + pattern matching sobre el
-     *   tipo de factura (ver CalculadoraIva en la GUIA-DOCENTE.md).
+     *   tipo de factura (ver CONSIGNA.md, paso de pattern matching).
      *   Este metodo se elimina de la interface en ese paso.
      */
     double calcularIva();
