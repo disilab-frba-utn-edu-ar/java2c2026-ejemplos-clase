@@ -1,5 +1,6 @@
 package ar.edu.utn.frba.facturacion.controlador;
 
+import ar.edu.utn.frba.facturacion.modelo.CalculadoraIva;
 import ar.edu.utn.frba.facturacion.modelo.Factura;
 import ar.edu.utn.frba.facturacion.servicio.FacturaServicio;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +16,9 @@ import java.util.Map;
 /**
  * Endpoints REST para consultar facturas.
  *
- * Probar (con la app corriendo en el puerto 8080):
+ * Version MIGRADA: usa Streams para armar las respuestas y Optional para
+ * resolver el caso "no encontrada" sin chequear null.
+ *
  *   GET http://localhost:8080/facturas
  *   GET http://localhost:8080/facturas/A-0001
  *   GET http://localhost:8080/facturas/total-iva
@@ -33,20 +36,16 @@ public class FacturaControlador {
 
     @GetMapping
     public List<Map<String, Object>> listarTodas() {
-        List<Map<String, Object>> respuesta = new java.util.ArrayList<>();
-        for (Factura f : servicio.listarTodas()) {
-            respuesta.add(aMapa(f));
-        }
-        return respuesta;
+        return servicio.listarTodas().stream()
+                .map(this::aMapa)
+                .toList();
     }
 
     @GetMapping("/tipo/{tipo}")
     public List<Map<String, Object>> listarPorTipo(@PathVariable String tipo) {
-        List<Map<String, Object>> respuesta = new java.util.ArrayList<>();
-        for (Factura f : servicio.listarPorTipo(tipo)) {
-            respuesta.add(aMapa(f));
-        }
-        return respuesta;
+        return servicio.listarPorTipo(tipo).stream()
+                .map(this::aMapa)
+                .toList();
     }
 
     @GetMapping("/total-iva")
@@ -56,33 +55,20 @@ public class FacturaControlador {
         return respuesta;
     }
 
-    /**
-     * Busca una factura por numero.
-     *
-     * TODO PASO 6 (Optional): cuando el servicio devuelva
-     *   Optional<Factura>, este metodo se vuelve mas expresivo:
-     *
-     *       return servicio.buscarPorNumero(numero)
-     *               .map(f -> ResponseEntity.ok(aMapa(f)))
-     *               .orElse(ResponseEntity.notFound().build());
-     */
     @GetMapping("/{numero}")
     public ResponseEntity<Map<String, Object>> buscarPorNumero(@PathVariable String numero) {
-        Factura factura = servicio.buscarPorNumero(numero);
-        // Chequeo manual del null (lo que Optional viene a mejorar).
-        if (factura == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(aMapa(factura));
+        return servicio.buscarPorNumero(numero)
+                .map(f -> ResponseEntity.ok(aMapa(f)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     /** Arma la representacion JSON de una factura, incluyendo su IVA. */
     private Map<String, Object> aMapa(Factura factura) {
         Map<String, Object> mapa = new LinkedHashMap<>();
-        mapa.put("numero", factura.getNumero());
-        mapa.put("tipo", factura.getTipo());
-        mapa.put("neto", factura.getNeto());
-        mapa.put("iva", factura.calcularIva());
+        mapa.put("numero", factura.numero());
+        mapa.put("tipo", CalculadoraIva.tipo(factura));
+        mapa.put("neto", factura.neto());
+        mapa.put("iva", CalculadoraIva.calcular(factura));
         return mapa;
     }
 }

@@ -1,16 +1,17 @@
 package ar.edu.utn.frba.facturacion.servicio;
 
+import ar.edu.utn.frba.facturacion.modelo.CalculadoraIva;
 import ar.edu.utn.frba.facturacion.modelo.Factura;
 import ar.edu.utn.frba.facturacion.repositorio.FacturaRepositorio;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Logica de negocio sobre facturas.
  *
- * Version LEGACY: acumula con bucles {@code for} y depende de que el
- * repositorio devuelva {@code null}.
+ * Version MIGRADA: acumula con Streams y propaga Optional.
  */
 @Service
 public class FacturaServicio {
@@ -29,40 +30,15 @@ public class FacturaServicio {
         return repositorio.buscarPorTipo(tipo);
     }
 
-    /**
-     * Suma el IVA de todas las facturas.
-     *
-     * TODO PASO 5 (Streams): reemplazar el for acumulador por:
-     *       return repositorio.buscarTodas().stream()
-     *               .mapToDouble(Factura::calcularIva)
-     *               .sum();
-     *
-     * TODO PASO 3 (Pattern Matching): cuando el calculo del IVA salga
-     *   de las clases, aca se usara CalculadoraIva.calcular(f) en lugar
-     *   de f.calcularIva().
-     */
+    /** Suma el IVA de todas las facturas con Streams + pattern matching. */
     public double calcularTotalIva() {
-        double total = 0.0;
-        for (Factura f : repositorio.buscarTodas()) {
-            total += f.calcularIva();
-        }
-        return total;
+        return repositorio.buscarTodas().stream()
+                .mapToDouble(CalculadoraIva::calcular)
+                .sum();
     }
 
-    /**
-     * Busca una factura por numero.
-     *
-     * TODO PASO 6 (Optional): cuando el repositorio devuelva
-     *   Optional<Factura>, este metodo puede propagarlo:
-     *       return repositorio.buscarPorNumero(numero);
-     *   y el controlador decide que responder si esta vacio.
-     */
-    public Factura buscarPorNumero(String numero) {
-        Factura factura = repositorio.buscarPorNumero(numero);
-        if (factura == null) {
-            // Manejo manual del null (facil de olvidar).
-            return null;
-        }
-        return factura;
+    /** Busca una factura por numero; propaga el Optional del repositorio. */
+    public Optional<Factura> buscarPorNumero(String numero) {
+        return repositorio.buscarPorNumero(numero);
     }
 }

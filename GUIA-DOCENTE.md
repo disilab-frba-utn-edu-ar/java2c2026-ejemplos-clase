@@ -286,5 +286,7 @@ estar, y `map`/`orElse` hacen el manejo explícito e imposible de olvidar.
 - [ ] Agregar/quitar un tipo del `permits` rompe la compilación en los `switch`.
 - [ ] El repositorio y el servicio usan streams, sin `for`.
 - [ ] `buscarPorNumero` devuelve `Optional`, sin `null`.
-- [ ] Los endpoints siguen respondiendo igual (el IVA total sigue dando 10080
-      con A/B/C; cambia si se agrega la `FacturaE` a los datos semilla).
+- [ ] Los endpoints siguen respondiendo igual. El IVA total sigue dando
+      **10080** incluso al agregar la `FacturaE` a los datos semilla, porque
+      la exportación es exenta (IVA 0); lo que cambia es que aparece una
+      factura más en `/facturas` y en `/facturas/tipo/E`.
