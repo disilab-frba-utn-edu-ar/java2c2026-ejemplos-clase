@@ -13,12 +13,12 @@ Los alumnos parten de un proyecto **Spring Boot legacy** (esta branch,
 
 | Paso | Feature | Qué se migra |
 |------|---------|--------------|
-| 1 | *(punto de partida)* | Interface `Factura` + clases `FacturaA/B/C` con polimorfismo |
-| 2 | **Records** | `FacturaA/B/C` pasan a ser `record` |
-| 3 | **Pattern matching** | El cálculo del IVA sale de las clases a un `switch` |
-| 4 | **Sealed** | Se sella `Factura`; agregar `FacturaE` **rompe** los `switch` |
-| 5 | **Streams** | El repositorio/servicio dejan el `for` por streams |
-| 6 | **Optional** | El repositorio deja de devolver `null` |
+| — | *(punto de partida)* | Interface `Factura` + clases `FacturaA/B/C` con polimorfismo |
+| 1 | **Records** | `FacturaA/B/C` pasan a ser `record` |
+| 2 | **Pattern matching** | El cálculo del IVA sale de las clases a un `switch` |
+| 3 | **Sealed** | Se sella `Factura`; agregar `FacturaE` **rompe** los `switch` |
+| 4 | **Streams** | El repositorio/servicio dejan el `for` por streams |
+| 5 | **Optional** | El repositorio deja de devolver `null` |
 
 El orden importa: primero records (para poder hacer pattern matching con
 deconstrucción), después sealed (para que el `switch` sea *exhaustivo* y el
@@ -51,11 +51,11 @@ Valores esperados con los datos semilla: el IVA total da **10080.0**
 | A | Responsable Inscripto (discrimina IVA) | 21% del neto |
 | B | Consumidor Final (IVA incluido) | 21% del neto |
 | C | Monotributista / Exento | 0 |
-| E | Exportación *(se agrega en el paso 4)* | 0 (exenta) |
+| E | Exportación *(se agrega en el paso 3)* | 0 (exenta) |
 
 ---
 
-## Paso 2 — Records
+## Paso 1 — Records
 
 **Objetivo:** que `FacturaA`, `FacturaB` y `FacturaC` sean `record`.
 
@@ -68,13 +68,13 @@ Como la interface `Factura` hoy declara `getNumero()`, `getNeto()`,
 
 - **Recomendado:** aprovechar el paso para *limpiar* la interface. Los
   accessors del record (`numero()`, `neto()`) cubren los datos, y el
-  `getTipo()`/`calcularIva()` se resuelven aparte (ver Paso 3). La interface
+  `getTipo()`/`calcularIva()` se resuelven aparte (ver Paso 2). La interface
   queda como un simple marcador de "esto es una Factura".
 - Alternativa conservadora: mantener los `getX()` implementándolos a mano
   dentro del record. Sirve para mostrar que un record *también* puede tener
   métodos, pero ensucia el ejemplo.
 
-Cómo queda cada record (con la interface ya limpia del Paso 3):
+Cómo queda cada record (con la interface ya limpia del Paso 2):
 
 ```java
 public record FacturaA(String numero, double neto, String cuitCliente)
@@ -93,7 +93,7 @@ refactor del IDE.
 
 ---
 
-## Paso 3 — Pattern matching (cálculo del IVA)
+## Paso 2 — Pattern matching (cálculo del IVA)
 
 **Objetivo:** sacar `calcularIva()` de las clases y resolverlo con un
 `switch` con *pattern matching* sobre el tipo de factura.
@@ -123,7 +123,7 @@ Puntos para remarcar:
   la variable tipada `a`. No hace falta castear.
 - Por ahora **hace falta el `default`**: como la interface todavía **no** es
   sealed, el compilador no puede saber que A/B/C son las únicas. Ese `default`
-  es justamente lo que vamos a poder borrar en el Paso 4.
+  es justamente lo que vamos a poder borrar en el Paso 3.
 - Se puede agrupar: `case FacturaA a, FacturaB b -> ...` (mismo 21%). Queda a
   criterio si mostrarlo separado (más claro) o agrupado (más DRY).
 
@@ -147,7 +147,7 @@ public static String descripcion(Factura f) {
 
 ---
 
-## Paso 4 — Sealed (¡acá se rompe!)
+## Paso 3 — Sealed (¡acá se rompe!)
 
 **Objetivo:** sellar la jerarquía y agregar `FacturaE`.
 
@@ -157,7 +157,7 @@ public static String descripcion(Factura f) {
 public sealed interface Factura permits FacturaA, FacturaB, FacturaC { }
 ```
 
-2. **Borrar los `default`** de los `switch` del Paso 3. Ahora que la
+2. **Borrar los `default`** de los `switch` del Paso 2. Ahora que la
    jerarquía es cerrada, el compilador sabe que A/B/C son *todas* las
    opciones y el `switch` es exhaustivo sin `default`. (Mostrar que
    *compila igual* después de sacar el `default`.)
@@ -203,7 +203,7 @@ en los endpoints.
 
 ---
 
-## Paso 5 — De `for` a Streams
+## Paso 4 — De `for` a Streams
 
 **Objetivo:** reemplazar los bucles del repositorio y el servicio.
 
@@ -234,13 +234,13 @@ public double calcularTotalIva() {
 El `for` del controlador que arma la lista de mapas también se puede pasar a
 `.stream().map(this::aMapa).toList()`.
 
-> Nota: si en el Paso 2 se sacó `getTipo()` de la interface, el filtro por
+> Nota: si en el Paso 1 se sacó `getTipo()` de la interface, el filtro por
 > tipo se resuelve con pattern matching (`instanceof FacturaA`) o con un
 > método `CalculadoraIva.tipo(f)`. Decidir según cómo haya quedado la interface.
 
 ---
 
-## Paso 6 — De `null` a `Optional`
+## Paso 5 — De `null` a `Optional`
 
 **Objetivo:** que `buscarPorNumero` no devuelva `null`.
 
