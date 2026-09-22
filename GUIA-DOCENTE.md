@@ -17,7 +17,7 @@ Los alumnos parten de un proyecto **Spring Boot legacy** (esta branch,
 | 1 | **Records** | `FacturaA/B/C` pasan a ser `record` |
 | 2 | **Pattern matching** | El cálculo del IVA sale de las clases a un `switch` |
 | 3 | **Sealed** | Se sella `Factura`; agregar `FacturaE` **rompe** los `switch` |
-| 4 | **Streams** | El repositorio y el controlador dejan el `for` por streams |
+| 4 | **Streams** | El repositorio y el servicio dejan el `for` por streams |
 | 5 | **Optional** | El repositorio deja de devolver `null` |
 
 El orden importa: primero records (para poder hacer pattern matching con
@@ -89,7 +89,7 @@ public record FacturaC(String numero, double neto)
 ```
 
 **Se rompe en:** todos los usos de `getNumero()`/`getNeto()` pasan a
-`numero()`/`neto()` (repositorio y controlador). Buen momento para mostrar el
+`numero()`/`neto()` (repositorio y servicio). Buen momento para mostrar el
 refactor del IDE.
 
 ---
@@ -129,8 +129,9 @@ Puntos para remarcar:
   criterio si mostrarlo separado (más claro) o agrupado (más DRY).
 
 Se reemplaza la llamada a `factura.calcularIva()` por
-`CalculadoraIva.calcular(factura)` en el controlador (en el detalle de la
-factura), y se elimina `calcularIva()` de la interface y de los records.
+`CalculadoraIva.calcular(factura)` en el servicio (en `aDetalle`, al armar el
+detalle de la factura), y se elimina `calcularIva()` de la interface y de los
+records.
 
 Segundo `switch` (opcional, refuerza el paso siguiente): una descripción por
 tipo, que también quedará incompleta al agregar `FacturaE`.
@@ -206,7 +207,7 @@ en los endpoints.
 
 ## Paso 4 — De `for` a Streams
 
-**Objetivo:** reemplazar los bucles del repositorio y del controlador.
+**Objetivo:** reemplazar los bucles del repositorio y del servicio.
 
 `FacturaRepositorio`:
 
@@ -222,13 +223,15 @@ public List<Factura> buscarPorTipo(String tipo) {
 }
 ```
 
-Los `for` del controlador que arman las listas de resúmenes también pasan a
+Los `for` del servicio que arman las listas de resúmenes también pasan a
 Streams:
 
 ```java
-return servicio.listarTodas().stream()
-        .map(this::aResumen)
-        .toList();
+public List<Map<String, Object>> resumenDeTodas() {
+    return repositorio.buscarTodas().stream()
+            .map(this::aResumen)
+            .toList();
+}
 ```
 
 > Nota: si en el Paso 1 se sacó `getTipo()` de la interface, el filtro por
@@ -251,11 +254,12 @@ public Optional<Factura> buscarPorNumero(String numero) {
 }
 ```
 
-`FacturaServicio` propaga el `Optional`:
+`FacturaServicio` propaga el `Optional` al armar el detalle:
 
 ```java
-public Optional<Factura> buscarPorNumero(String numero) {
-    return repositorio.buscarPorNumero(numero);
+public Optional<Map<String, Object>> detalle(String numero) {
+    return repositorio.buscarPorNumero(numero)
+            .map(this::aDetalle);
 }
 ```
 
@@ -264,9 +268,9 @@ public Optional<Factura> buscarPorNumero(String numero) {
 ```java
 @GetMapping("/{numero}")
 public ResponseEntity<Map<String, Object>> buscarPorNumero(@PathVariable String numero) {
-    return servicio.buscarPorNumero(numero)
-            .map(f -> ResponseEntity.ok(aMapa(f)))
-            .orElse(ResponseEntity.notFound().build());
+    return servicio.detalle(numero)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.notFound().build());
 }
 ```
 
@@ -281,7 +285,7 @@ estar, y `map`/`orElse` hacen el manejo explícito e imposible de olvidar.
 - [ ] `Factura` es `sealed ... permits ...`.
 - [ ] El IVA se calcula con `switch` + pattern matching, **sin `default`**.
 - [ ] Agregar/quitar un tipo del `permits` rompe la compilación en los `switch`.
-- [ ] El repositorio y el controlador usan streams, sin `for`.
+- [ ] El repositorio y el servicio usan streams, sin `for`.
 - [ ] `buscarPorNumero` devuelve `Optional`, sin `null`.
 - [ ] El detalle `GET /facturas/{numero}` muestra el IVA de esa factura
       (`A-0001` → 2100.0; `C-0001` → 0.0; `E-0001` → 0.0), y los listados
