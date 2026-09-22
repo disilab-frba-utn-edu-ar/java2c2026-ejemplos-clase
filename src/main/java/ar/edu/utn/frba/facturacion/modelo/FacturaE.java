@@ -1,5 +1,7 @@
 package ar.edu.utn.frba.facturacion.modelo;
 
+import java.time.LocalDate;
+
 /**
  * Factura tipo E: operacion de Exportacion (exenta de IVA).
  *
@@ -7,6 +9,6 @@ package ar.edu.utn.frba.facturacion.modelo;
  * permits de {@link Factura}, todos los switch exhaustivos sobre Factura
  * dejan de compilar hasta contemplar este nuevo caso.
  */
-public record FacturaE(String numero, double neto, String paisDestino)
+public record FacturaE(String numero, double neto, String paisDestino, LocalDate fecha)
         implements Factura {
 }

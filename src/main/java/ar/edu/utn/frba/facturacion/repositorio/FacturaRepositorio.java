@@ -8,6 +8,7 @@ import ar.edu.utn.frba.facturacion.modelo.FacturaC;
 import ar.edu.utn.frba.facturacion.modelo.FacturaE;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,12 +22,13 @@ import java.util.Optional;
 public class FacturaRepositorio {
 
     private final List<Factura> facturas = List.of(
-            new FacturaA("A-0001", 10000.0, "30-71234567-8"),
-            new FacturaA("A-0002", 25000.0, "30-59876543-2"),
-            new FacturaB("B-0001", 5000.0, "Juan Perez"),
-            new FacturaB("B-0002", 8000.0, "Ana Gomez"),
-            new FacturaC("C-0001", 3000.0),
-            new FacturaE("E-0001", 15000.0, "Brasil")
+            new FacturaA("A-0001", 10000.0, "30-71234567-8", LocalDate.of(2026, 1, 15)),
+            new FacturaA("A-0002", 25000.0, "30-59876543-2", LocalDate.of(2026, 2, 20)),
+            new FacturaA("A-0003", 40000.0, "30-68888888-8", LocalDate.of(2026, 5, 8)),
+            new FacturaB("B-0001", 5000.0, "Juan Perez", LocalDate.of(2026, 1, 10)),
+            new FacturaB("B-0002", 8000.0, "Ana Gomez", LocalDate.of(2026, 3, 5)),
+            new FacturaC("C-0001", 3000.0, LocalDate.of(2026, 2, 28)),
+            new FacturaE("E-0001", 15000.0, "Brasil", LocalDate.of(2026, 3, 20))
     );
 
     /** Todas las facturas. */

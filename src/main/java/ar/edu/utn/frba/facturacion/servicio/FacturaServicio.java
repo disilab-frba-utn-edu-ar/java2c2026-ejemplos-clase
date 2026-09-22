@@ -5,6 +5,7 @@ import ar.edu.utn.frba.facturacion.modelo.Factura;
 import ar.edu.utn.frba.facturacion.repositorio.FacturaRepositorio;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,22 @@ public class FacturaServicio {
                 .toList();
     }
 
+    /**
+     * Busca facturas de un tipo, emitidas dentro de un rango de fechas
+     * [desde, hasta] (inclusive) y con neto MAYOR a un monto minimo.
+     * Cada condicion es un filter encadenado sobre el stream.
+     */
+    public List<Map<String, Object>> buscar(String tipo, LocalDate desde,
+                                            LocalDate hasta, double montoMinimo) {
+        return repositorio.buscarTodas().stream()
+                .filter(f -> CalculadoraIva.tipo(f).equals(tipo))
+                .filter(f -> !f.fecha().isBefore(desde))
+                .filter(f -> !f.fecha().isAfter(hasta))
+                .filter(f -> f.neto() > montoMinimo)
+                .map(this::aResumen)
+                .toList();
+    }
+
     /** Detalle (con IVA) de una factura, vacio si no existe. */
     public Optional<Map<String, Object>> detalle(String numero) {
         return repositorio.buscarPorNumero(numero)
@@ -51,6 +68,7 @@ public class FacturaServicio {
         mapa.put("numero", factura.numero());
         mapa.put("tipo", CalculadoraIva.tipo(factura));
         mapa.put("neto", factura.neto());
+        mapa.put("fecha", factura.fecha());
         return mapa;
     }
 

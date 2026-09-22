@@ -33,10 +33,13 @@ mvn spring-boot:run
 
 Endpoints (puerto 8080):
 
-- `GET /facturas` — listado (resumen: número, tipo, neto)
+- `GET /facturas` — listado (resumen: número, tipo, neto, fecha)
 - `GET /facturas/tipo/{tipo}` — listado por tipo (`A`, `B` o `C`)
 - `GET /facturas/{numero}` — detalle de una factura (ej. `A-0001`), incluye
   su IVA; 404 si no existe
+- `GET /facturas/buscar?tipo=A&desde=2026-01-01&hasta=2026-03-31&montoMinimo=8000`
+  — facturas de un tipo, en un rango de fechas y con neto mayor a un mínimo
+  (con los datos semilla, ese ejemplo devuelve `A-0001` y `A-0002`)
 
 > Si el 8080 está ocupado (por ejemplo por otra app abierta desde el IDE):
 > `mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8081`
@@ -78,13 +81,13 @@ Como la interface `Factura` hoy declara `getNumero()`, `getNeto()`,
 Cómo queda cada record (con la interface ya limpia del Paso 2):
 
 ```java
-public record FacturaA(String numero, double neto, String cuitCliente)
+public record FacturaA(String numero, double neto, String cuitCliente, LocalDate fecha)
         implements Factura { }
 
-public record FacturaB(String numero, double neto, String nombreCliente)
+public record FacturaB(String numero, double neto, String nombreCliente, LocalDate fecha)
         implements Factura { }
 
-public record FacturaC(String numero, double neto)
+public record FacturaC(String numero, double neto, LocalDate fecha)
         implements Factura { }
 ```
 
@@ -233,6 +236,48 @@ public List<Map<String, Object>> resumenDeTodas() {
             .toList();
 }
 ```
+
+**El caso central del paso: `FacturaServicio.buscar(...)`.** Parte de un `for`
+con varios `if` anidados (tipo + rango de fechas + monto mínimo):
+
+```java
+// ANTES (legacy)
+public List<Map<String, Object>> buscar(String tipo, LocalDate desde,
+                                        LocalDate hasta, double montoMinimo) {
+    List<Map<String, Object>> resultado = new ArrayList<>();
+    for (Factura f : repositorio.buscarTodas()) {
+        if (f.getTipo().equals(tipo)) {
+            if (!f.getFecha().isBefore(desde) && !f.getFecha().isAfter(hasta)) {
+                if (f.getNeto() > montoMinimo) {
+                    resultado.add(aResumen(f));
+                }
+            }
+        }
+    }
+    return resultado;
+}
+```
+
+Cada condición se convierte en un `filter` encadenado; los `if` anidados
+desaparecen:
+
+```java
+// DESPUÉS (migrado)
+public List<Map<String, Object>> buscar(String tipo, LocalDate desde,
+                                        LocalDate hasta, double montoMinimo) {
+    return repositorio.buscarTodas().stream()
+            .filter(f -> CalculadoraIva.tipo(f).equals(tipo))
+            .filter(f -> !f.fecha().isBefore(desde))
+            .filter(f -> !f.fecha().isAfter(hasta))
+            .filter(f -> f.neto() > montoMinimo)
+            .map(this::aResumen)
+            .toList();
+}
+```
+
+Puntos para remarcar: cada `filter` es una condición legible e independiente
+(se agregan/quitan sin tocar las demás), y `!fecha.isBefore(desde) &&
+!fecha.isAfter(hasta)` es la forma idiomática de "dentro del rango inclusive".
 
 > Nota: si en el Paso 1 se sacó `getTipo()` de la interface, el filtro por
 > tipo se resuelve con pattern matching (`instanceof FacturaA`) o con un

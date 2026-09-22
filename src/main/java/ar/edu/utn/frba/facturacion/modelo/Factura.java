@@ -1,5 +1,7 @@
 package ar.edu.utn.frba.facturacion.modelo;
 
+import java.time.LocalDate;
+
 /**
  * Representa una factura de venta.
  *
@@ -8,7 +10,7 @@ package ar.edu.utn.frba.facturacion.modelo;
  * sean EXHAUSTIVOS (sin default). El calculo del IVA ya no vive aca: se
  * resuelve por fuera con pattern matching en {@code CalculadoraIva}.
  *
- * Se declaran solo numero() y neto(): los records las cumplen
+ * Se declaran numero(), neto() y fecha(): los records las cumplen
  * automaticamente con sus accessors.
  */
 public sealed interface Factura
@@ -17,4 +19,6 @@ public sealed interface Factura
     String numero();
 
     double neto();
+
+    LocalDate fecha();
 }

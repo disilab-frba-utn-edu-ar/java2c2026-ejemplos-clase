@@ -1,12 +1,15 @@
 package ar.edu.utn.frba.facturacion.controlador;
 
 import ar.edu.utn.frba.facturacion.servicio.FacturaServicio;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +39,20 @@ public class FacturaControlador {
     @GetMapping("/tipo/{tipo}")
     public List<Map<String, Object>> listarPorTipo(@PathVariable String tipo) {
         return servicio.resumenPorTipo(tipo);
+    }
+
+    /**
+     * Busqueda: facturas de un tipo, en un rango de fechas y con neto mayor
+     * a un minimo. Ej:
+     *   /facturas/buscar?tipo=A&desde=2026-01-01&hasta=2026-03-31&montoMinimo=8000
+     */
+    @GetMapping("/buscar")
+    public List<Map<String, Object>> buscar(
+            @RequestParam String tipo,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            @RequestParam double montoMinimo) {
+        return servicio.buscar(tipo, desde, hasta, montoMinimo);
     }
 
     @GetMapping("/{numero}")
