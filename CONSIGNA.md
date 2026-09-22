@@ -15,10 +15,12 @@ mvn spring-boot:run
 
 Endpoints (puerto 8080):
 
-- `GET /facturas` — listado de facturas (resumen: número, tipo, neto)
+- `GET /facturas` — listado de facturas (resumen: número, tipo, neto, fecha)
 - `GET /facturas/tipo/{tipo}` — listado por tipo (`A`, `B` o `C`)
 - `GET /facturas/{numero}` — detalle de una factura (ej. `A-0001`), **incluye
   su IVA**; 404 si no existe
+- `GET /facturas/buscar?tipo=A&desde=2026-01-01&hasta=2026-03-31&montoMinimo=8000`
+  — facturas de un tipo, en un rango de fechas y con neto mayor a un mínimo
 
 > Si el puerto 8080 está ocupado:
 > `mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8081`
@@ -48,7 +50,11 @@ Endpoints (puerto 8080):
    que se rompa.
 
 4. **Streams** — Reemplazá los bucles `for` del repositorio y el servicio por
-   operaciones de `Stream` (`filter`, `map`, `mapToDouble`, `toList`, ...).
+   operaciones de `Stream` (`filter`, `map`, `toList`, ...). Prestá especial
+   atención al método `buscar(...)` del servicio: hoy es un `for` con varios
+   `if` anidados (tipo + rango de fechas + monto mínimo). Tiene que quedar
+   como una **cadena de `.filter(...)`**, una por cada condición, cerrada con
+   `.map(this::aResumen).toList()`.
 
 5. **Optional** — Hacé que `buscarPorNumero` deje de devolver `null` y
    devuelva `Optional<Factura>`. Ajustá el servicio y el controlador para

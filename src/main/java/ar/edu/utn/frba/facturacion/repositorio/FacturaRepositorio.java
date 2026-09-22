@@ -6,6 +6,7 @@ import ar.edu.utn.frba.facturacion.modelo.FacturaB;
 import ar.edu.utn.frba.facturacion.modelo.FacturaC;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,40 +23,22 @@ public class FacturaRepositorio {
 
     public FacturaRepositorio() {
         // Datos de ejemplo (se cargan al iniciar la aplicacion).
-        facturas.add(new FacturaA("A-0001", 10000.0, "30-71234567-8"));
-        facturas.add(new FacturaA("A-0002", 25000.0, "30-59876543-2"));
-        facturas.add(new FacturaB("B-0001", 5000.0, "Juan Perez"));
-        facturas.add(new FacturaB("B-0002", 8000.0, "Ana Gomez"));
-        facturas.add(new FacturaC("C-0001", 3000.0));
+        facturas.add(new FacturaA("A-0001", 10000.0, "30-71234567-8", LocalDate.of(2026, 1, 15)));
+        facturas.add(new FacturaA("A-0002", 25000.0, "30-59876543-2", LocalDate.of(2026, 2, 20)));
+        facturas.add(new FacturaA("A-0003", 40000.0, "30-68888888-8", LocalDate.of(2026, 5, 8)));
+        facturas.add(new FacturaB("B-0001", 5000.0, "Juan Perez", LocalDate.of(2026, 1, 10)));
+        facturas.add(new FacturaB("B-0002", 8000.0, "Ana Gomez", LocalDate.of(2026, 3, 5)));
+        facturas.add(new FacturaC("C-0001", 3000.0, LocalDate.of(2026, 2, 28)));
     }
 
-    /**
-     * Devuelve todas las facturas.
-     *
-     * TODO PASO 4 (Streams): este metodo copia la lista con un for.
-     *   Se puede resolver con Streams:
-     *       return facturas.stream().toList();
-     */
     public List<Factura> buscarTodas() {
-        List<Factura> resultado = new ArrayList<>();
-        for (Factura f : facturas) {
-            resultado.add(f);
-        }
-        return resultado;
+        return facturas;
     }
 
     /**
-     * Busca una factura por numero.
+     * TODO PASO 5 (Optional):
+     *   Migrar la firma a Optional<Factura> y resolver con Streams
      *
-     * TODO PASO 5 (Optional): hoy devuelve null si no existe, lo que
-     *   obliga a quien la usa a acordarse de chequear el null.
-     *   Migrar la firma a Optional<Factura> y resolver con Streams:
-     *
-     *       public Optional<Factura> buscarPorNumero(String numero) {
-     *           return facturas.stream()
-     *                   .filter(f -> f.getNumero().equals(numero))
-     *                   .findFirst();
-     *       }
      */
     public Factura buscarPorNumero(String numero) {
         for (Factura f : facturas) {
@@ -67,12 +50,8 @@ public class FacturaRepositorio {
     }
 
     /**
-     * Devuelve las facturas de un tipo dado ("A", "B" o "C").
      *
-     * TODO PASO 4 (Streams): migrar el for + if a un filter de Streams:
-     *       return facturas.stream()
-     *               .filter(f -> f.getTipo().equals(tipo))
-     *               .toList();
+     * TODO PASO 4 (Streams): reemplazar el 
      */
     public List<Factura> buscarPorTipo(String tipo) {
         List<Factura> resultado = new ArrayList<>();

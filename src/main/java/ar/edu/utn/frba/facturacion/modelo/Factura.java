@@ -1,5 +1,7 @@
 package ar.edu.utn.frba.facturacion.modelo;
 
+import java.time.LocalDate;
+
 /**
  *
  * ============================================================
@@ -14,6 +16,8 @@ public interface Factura {
     double getNeto();
 
     String getTipo();
+
+    LocalDate getFecha();
 
     double calcularIva();
 }

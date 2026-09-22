@@ -1,5 +1,7 @@
 package ar.edu.utn.frba.facturacion.modelo;
 
+import java.time.LocalDate;
+
 /**
  * Factura tipo C: emitida por un Monotributista (o Exento).
  * NO discrimina ni cobra IVA, por lo que el IVA es 0.
@@ -10,10 +12,12 @@ public class FacturaC implements Factura {
 
     private final String numero;
     private final double neto;
+    private final LocalDate fecha;
 
-    public FacturaC(String numero, double neto) {
+    public FacturaC(String numero, double neto, LocalDate fecha) {
         this.numero = numero;
         this.neto = neto;
+        this.fecha = fecha;
     }
 
     @Override
@@ -32,8 +36,12 @@ public class FacturaC implements Factura {
     }
 
     @Override
+    public LocalDate getFecha() {
+        return fecha;
+    }
+
+    @Override
     public double calcularIva() {
-        // Monotributista: no corresponde IVA.
         return 0.0;
     }
 }

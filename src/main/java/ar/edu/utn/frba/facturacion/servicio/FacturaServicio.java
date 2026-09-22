@@ -4,6 +4,7 @@ import ar.edu.utn.frba.facturacion.modelo.Factura;
 import ar.edu.utn.frba.facturacion.repositorio.FacturaRepositorio;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -55,36 +56,61 @@ public class FacturaServicio {
     }
 
     /**
-     * Detalle (con IVA) de una factura, o null si no existe.
+     * Busca facturas de un tipo, emitidas dentro de un rango de fechas
+     * [desde, hasta] (inclusive) y con neto MAYOR a un monto minimo.
      *
-     * TODO PASO 5 (Optional): cuando el repositorio devuelva
-     *   Optional<Factura>, este metodo devuelve Optional<Map...> sin chequear
-     *   null:
-     *       return repositorio.buscarPorNumero(numero).map(this::aDetalle);
+     * TODO PASO 4 (Streams): reemplazar el for con los if anidados por una
+     *   cadena de filtros sobre el stream. Cada condicion es un filter:
+     *
+     *       return repositorio.buscarTodas().stream()
+     *               .filter(f -> f.getTipo().equals(tipo))
+     *               .filter(f -> !f.getFecha().isBefore(desde))
+     *               .filter(f -> !f.getFecha().isAfter(hasta))
+     *               .filter(f -> f.getNeto() > montoMinimo)
+     *               .map(this::aResumen)
+     *               .toList();
+     */
+    public List<Map<String, Object>> buscar(String tipo, LocalDate desde,
+                                            LocalDate hasta, double montoMinimo) {
+        List<Map<String, Object>> resultado = new ArrayList<>();
+        for (Factura f : repositorio.buscarTodas()) {
+            if (f.getTipo().equals(tipo)) {
+                if (!f.getFecha().isBefore(desde) && !f.getFecha().isAfter(hasta)) {
+                    if (f.getNeto() > montoMinimo) {
+                        resultado.add(aResumen(f));
+                    }
+                }
+            }
+        }
+        return resultado;
+    }
+
+    /**
+     *
+     * TODO PASO 5 (Optional)
      */
     public Map<String, Object> detalle(String numero) {
         Factura factura = repositorio.buscarPorNumero(numero);
         if (factura == null) {
-            // Manejo manual del null (facil de olvidar).
             return null;
         }
         return aDetalle(factura);
     }
 
-    /** Resumen de una factura (sin IVA), para los listados. */
+
     private Map<String, Object> aResumen(Factura factura) {
         Map<String, Object> mapa = new LinkedHashMap<>();
         mapa.put("numero", factura.getNumero());
         mapa.put("tipo", factura.getTipo());
         mapa.put("neto", factura.getNeto());
+        mapa.put("fecha", factura.getFecha());
         return mapa;
     }
 
-    /** Detalle de una factura, con el IVA calculado. */
+
     private Map<String, Object> aDetalle(Factura factura) {
         Map<String, Object> mapa = aResumen(factura);
-        // TODO PASO 2 (Pattern Matching): cuando el calculo salga de las
-        //   clases, el IVA se obtendra con CalculadoraIva.calcular(factura).
+        // TODO PASO 2 (Pattern Matching):
         mapa.put("iva", factura.calcularIva());
         return mapa;
     }
