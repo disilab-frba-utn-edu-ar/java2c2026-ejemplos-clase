@@ -16,10 +16,11 @@ import java.util.Map;
  * Endpoints REST para consultar facturas.
  *
  * Probar (con la app corriendo en el puerto 8080):
- *   GET http://localhost:8080/facturas
- *   GET http://localhost:8080/facturas/A-0001
- *   GET http://localhost:8080/facturas/total-iva
- *   GET http://localhost:8080/facturas/tipo/A
+ *   GET http://localhost:8080/facturas          -> listado (resumen)
+ *   GET http://localhost:8080/facturas/tipo/A    -> listado por tipo (resumen)
+ *   GET http://localhost:8080/facturas/A-0001     -> detalle (incluye el IVA)
+ *
+ * El IVA se calcula por factura y se muestra en el detalle de una factura.
  */
 @RestController
 @RequestMapping("/facturas")
@@ -35,7 +36,7 @@ public class FacturaControlador {
     public List<Map<String, Object>> listarTodas() {
         List<Map<String, Object>> respuesta = new java.util.ArrayList<>();
         for (Factura f : servicio.listarTodas()) {
-            respuesta.add(aMapa(f));
+            respuesta.add(aResumen(f));
         }
         return respuesta;
     }
@@ -44,26 +45,19 @@ public class FacturaControlador {
     public List<Map<String, Object>> listarPorTipo(@PathVariable String tipo) {
         List<Map<String, Object>> respuesta = new java.util.ArrayList<>();
         for (Factura f : servicio.listarPorTipo(tipo)) {
-            respuesta.add(aMapa(f));
+            respuesta.add(aResumen(f));
         }
         return respuesta;
     }
 
-    @GetMapping("/total-iva")
-    public Map<String, Object> totalIva() {
-        Map<String, Object> respuesta = new LinkedHashMap<>();
-        respuesta.put("totalIva", servicio.calcularTotalIva());
-        return respuesta;
-    }
-
     /**
-     * Busca una factura por numero.
+     * Detalle de una factura, incluido su IVA.
      *
      * TODO PASO 5 (Optional): cuando el servicio devuelva
      *   Optional<Factura>, este metodo se vuelve mas expresivo:
      *
      *       return servicio.buscarPorNumero(numero)
-     *               .map(f -> ResponseEntity.ok(aMapa(f)))
+     *               .map(f -> ResponseEntity.ok(aDetalle(f)))
      *               .orElse(ResponseEntity.notFound().build());
      */
     @GetMapping("/{numero}")
@@ -73,15 +67,23 @@ public class FacturaControlador {
         if (factura == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(aMapa(factura));
+        return ResponseEntity.ok(aDetalle(factura));
     }
 
-    /** Arma la representacion JSON de una factura, incluyendo su IVA. */
-    private Map<String, Object> aMapa(Factura factura) {
+    /** Resumen de una factura (sin IVA), para los listados. */
+    private Map<String, Object> aResumen(Factura factura) {
         Map<String, Object> mapa = new LinkedHashMap<>();
         mapa.put("numero", factura.getNumero());
         mapa.put("tipo", factura.getTipo());
         mapa.put("neto", factura.getNeto());
+        return mapa;
+    }
+
+    /** Detalle de una factura, con el IVA calculado. */
+    private Map<String, Object> aDetalle(Factura factura) {
+        Map<String, Object> mapa = aResumen(factura);
+        // TODO PASO 2 (Pattern Matching): cuando el calculo salga de las
+        //   clases, el IVA se obtendra con CalculadoraIva.calcular(factura).
         mapa.put("iva", factura.calcularIva());
         return mapa;
     }

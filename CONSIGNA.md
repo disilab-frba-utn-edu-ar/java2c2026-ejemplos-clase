@@ -15,10 +15,10 @@ mvn spring-boot:run
 
 Endpoints (puerto 8080):
 
-- `GET /facturas` — todas las facturas
-- `GET /facturas/{numero}` — una factura (ej. `A-0001`); 404 si no existe
-- `GET /facturas/total-iva` — suma del IVA de todas
-- `GET /facturas/tipo/{tipo}` — filtra por `A`, `B` o `C`
+- `GET /facturas` — listado de facturas (resumen: número, tipo, neto)
+- `GET /facturas/tipo/{tipo}` — listado por tipo (`A`, `B` o `C`)
+- `GET /facturas/{numero}` — detalle de una factura (ej. `A-0001`), **incluye
+  su IVA**; 404 si no existe
 
 > Si el puerto 8080 está ocupado:
 > `mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8081`

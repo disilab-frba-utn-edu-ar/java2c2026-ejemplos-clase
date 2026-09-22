@@ -9,8 +9,8 @@ import java.util.List;
 /**
  * Logica de negocio sobre facturas.
  *
- * Version LEGACY: acumula con bucles {@code for} y depende de que el
- * repositorio devuelva {@code null}.
+ * Version LEGACY: depende de que el repositorio devuelva {@code null}
+ * cuando no encuentra la factura.
  */
 @Service
 public class FacturaServicio {
@@ -27,26 +27,6 @@ public class FacturaServicio {
 
     public List<Factura> listarPorTipo(String tipo) {
         return repositorio.buscarPorTipo(tipo);
-    }
-
-    /**
-     * Suma el IVA de todas las facturas.
-     *
-     * TODO PASO 4 (Streams): reemplazar el for acumulador por:
-     *       return repositorio.buscarTodas().stream()
-     *               .mapToDouble(Factura::calcularIva)
-     *               .sum();
-     *
-     * TODO PASO 2 (Pattern Matching): cuando el calculo del IVA salga
-     *   de las clases, aca se usara CalculadoraIva.calcular(f) en lugar
-     *   de f.calcularIva().
-     */
-    public double calcularTotalIva() {
-        double total = 0.0;
-        for (Factura f : repositorio.buscarTodas()) {
-            total += f.calcularIva();
-        }
-        return total;
     }
 
     /**
