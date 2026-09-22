@@ -17,7 +17,7 @@ Los alumnos parten de un proyecto **Spring Boot legacy** (esta branch,
 | 1 | **Records** | `FacturaA/B/C` pasan a ser `record` |
 | 2 | **Pattern matching** | El cálculo del IVA sale de las clases a un `switch` |
 | 3 | **Sealed** | Se sella `Factura`; agregar `FacturaE` **rompe** los `switch` |
-| 4 | **Streams** | El repositorio/servicio dejan el `for` por streams |
+| 4 | **Streams** | El repositorio y el controlador dejan el `for` por streams |
 | 5 | **Optional** | El repositorio deja de devolver `null` |
 
 El orden importa: primero records (para poder hacer pattern matching con
@@ -33,16 +33,17 @@ mvn spring-boot:run
 
 Endpoints (puerto 8080):
 
-- `GET /facturas` — todas
-- `GET /facturas/{numero}` — una (ej. `A-0001`); 404 si no existe
-- `GET /facturas/total-iva` — suma del IVA de todas
-- `GET /facturas/tipo/{tipo}` — filtra por `A`, `B` o `C`
+- `GET /facturas` — listado (resumen: número, tipo, neto)
+- `GET /facturas/tipo/{tipo}` — listado por tipo (`A`, `B` o `C`)
+- `GET /facturas/{numero}` — detalle de una factura (ej. `A-0001`), incluye
+  su IVA; 404 si no existe
 
 > Si el 8080 está ocupado (por ejemplo por otra app abierta desde el IDE):
 > `mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8081`
 
-Valores esperados con los datos semilla: el IVA total da **10080.0**
-(A: 21% del neto, B: 21% del neto, C: 0%).
+El IVA se calcula **por factura** y se muestra en el detalle. Valores
+esperados con los datos semilla: `A-0001` (neto 10000) → IVA **2100.0**;
+`C-0001` → IVA **0.0**; `E-0001` (exportación) → IVA **0.0**.
 
 ## Reglas de IVA (contexto AFIP, simplificado)
 
@@ -127,9 +128,9 @@ Puntos para remarcar:
 - Se puede agrupar: `case FacturaA a, FacturaB b -> ...` (mismo 21%). Queda a
   criterio si mostrarlo separado (más claro) o agrupado (más DRY).
 
-Se reemplazan las llamadas a `factura.calcularIva()` por
-`CalculadoraIva.calcular(factura)` en el servicio y el controlador, y se
-elimina `calcularIva()` de la interface y de los records.
+Se reemplaza la llamada a `factura.calcularIva()` por
+`CalculadoraIva.calcular(factura)` en el controlador (en el detalle de la
+factura), y se elimina `calcularIva()` de la interface y de los records.
 
 Segundo `switch` (opcional, refuerza el paso siguiente): una descripción por
 tipo, que también quedará incompleta al agregar `FacturaE`.
@@ -205,7 +206,7 @@ en los endpoints.
 
 ## Paso 4 — De `for` a Streams
 
-**Objetivo:** reemplazar los bucles del repositorio y el servicio.
+**Objetivo:** reemplazar los bucles del repositorio y del controlador.
 
 `FacturaRepositorio`:
 
@@ -221,18 +222,14 @@ public List<Factura> buscarPorTipo(String tipo) {
 }
 ```
 
-`FacturaServicio.calcularTotalIva()`:
+Los `for` del controlador que arman las listas de resúmenes también pasan a
+Streams:
 
 ```java
-public double calcularTotalIva() {
-    return repositorio.buscarTodas().stream()
-            .mapToDouble(CalculadoraIva::calcular)
-            .sum();
-}
+return servicio.listarTodas().stream()
+        .map(this::aResumen)
+        .toList();
 ```
-
-El `for` del controlador que arma la lista de mapas también se puede pasar a
-`.stream().map(this::aMapa).toList()`.
 
 > Nota: si en el Paso 1 se sacó `getTipo()` de la interface, el filtro por
 > tipo se resuelve con pattern matching (`instanceof FacturaA`) o con un
@@ -284,9 +281,8 @@ estar, y `map`/`orElse` hacen el manejo explícito e imposible de olvidar.
 - [ ] `Factura` es `sealed ... permits ...`.
 - [ ] El IVA se calcula con `switch` + pattern matching, **sin `default`**.
 - [ ] Agregar/quitar un tipo del `permits` rompe la compilación en los `switch`.
-- [ ] El repositorio y el servicio usan streams, sin `for`.
+- [ ] El repositorio y el controlador usan streams, sin `for`.
 - [ ] `buscarPorNumero` devuelve `Optional`, sin `null`.
-- [ ] Los endpoints siguen respondiendo igual. El IVA total sigue dando
-      **10080** incluso al agregar la `FacturaE` a los datos semilla, porque
-      la exportación es exenta (IVA 0); lo que cambia es que aparece una
-      factura más en `/facturas` y en `/facturas/tipo/E`.
+- [ ] El detalle `GET /facturas/{numero}` muestra el IVA de esa factura
+      (`A-0001` → 2100.0; `C-0001` → 0.0; `E-0001` → 0.0), y los listados
+      devuelven el resumen sin IVA.

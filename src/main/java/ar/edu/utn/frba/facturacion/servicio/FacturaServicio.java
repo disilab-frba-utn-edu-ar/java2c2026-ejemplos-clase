@@ -1,6 +1,5 @@
 package ar.edu.utn.frba.facturacion.servicio;
 
-import ar.edu.utn.frba.facturacion.modelo.CalculadoraIva;
 import ar.edu.utn.frba.facturacion.modelo.Factura;
 import ar.edu.utn.frba.facturacion.repositorio.FacturaRepositorio;
 import org.springframework.stereotype.Service;
@@ -11,7 +10,7 @@ import java.util.Optional;
 /**
  * Logica de negocio sobre facturas.
  *
- * Version MIGRADA: acumula con Streams y propaga Optional.
+ * Version MIGRADA: consulta con Streams y propaga Optional.
  */
 @Service
 public class FacturaServicio {
@@ -28,13 +27,6 @@ public class FacturaServicio {
 
     public List<Factura> listarPorTipo(String tipo) {
         return repositorio.buscarPorTipo(tipo);
-    }
-
-    /** Suma el IVA de todas las facturas con Streams + pattern matching. */
-    public double calcularTotalIva() {
-        return repositorio.buscarTodas().stream()
-                .mapToDouble(CalculadoraIva::calcular)
-                .sum();
     }
 
     /** Busca una factura por numero; propaga el Optional del repositorio. */

@@ -19,10 +19,9 @@ import java.util.Map;
  * Version MIGRADA: usa Streams para armar las respuestas y Optional para
  * resolver el caso "no encontrada" sin chequear null.
  *
- *   GET http://localhost:8080/facturas
- *   GET http://localhost:8080/facturas/A-0001
- *   GET http://localhost:8080/facturas/total-iva
- *   GET http://localhost:8080/facturas/tipo/A
+ *   GET http://localhost:8080/facturas          -> listado (resumen)
+ *   GET http://localhost:8080/facturas/tipo/A    -> listado por tipo (resumen)
+ *   GET http://localhost:8080/facturas/A-0001     -> detalle (incluye el IVA)
  */
 @RestController
 @RequestMapping("/facturas")
@@ -37,37 +36,36 @@ public class FacturaControlador {
     @GetMapping
     public List<Map<String, Object>> listarTodas() {
         return servicio.listarTodas().stream()
-                .map(this::aMapa)
+                .map(this::aResumen)
                 .toList();
     }
 
     @GetMapping("/tipo/{tipo}")
     public List<Map<String, Object>> listarPorTipo(@PathVariable String tipo) {
         return servicio.listarPorTipo(tipo).stream()
-                .map(this::aMapa)
+                .map(this::aResumen)
                 .toList();
-    }
-
-    @GetMapping("/total-iva")
-    public Map<String, Object> totalIva() {
-        Map<String, Object> respuesta = new LinkedHashMap<>();
-        respuesta.put("totalIva", servicio.calcularTotalIva());
-        return respuesta;
     }
 
     @GetMapping("/{numero}")
     public ResponseEntity<Map<String, Object>> buscarPorNumero(@PathVariable String numero) {
         return servicio.buscarPorNumero(numero)
-                .map(f -> ResponseEntity.ok(aMapa(f)))
+                .map(f -> ResponseEntity.ok(aDetalle(f)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    /** Arma la representacion JSON de una factura, incluyendo su IVA. */
-    private Map<String, Object> aMapa(Factura factura) {
+    /** Resumen de una factura (sin IVA), para los listados. */
+    private Map<String, Object> aResumen(Factura factura) {
         Map<String, Object> mapa = new LinkedHashMap<>();
         mapa.put("numero", factura.numero());
         mapa.put("tipo", CalculadoraIva.tipo(factura));
         mapa.put("neto", factura.neto());
+        return mapa;
+    }
+
+    /** Detalle de una factura, con el IVA calculado por pattern matching. */
+    private Map<String, Object> aDetalle(Factura factura) {
+        Map<String, Object> mapa = aResumen(factura);
         mapa.put("iva", CalculadoraIva.calcular(factura));
         return mapa;
     }
