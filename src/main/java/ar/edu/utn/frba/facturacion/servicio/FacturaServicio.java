@@ -10,13 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Logica de negocio sobre facturas: arma el resumen (para listados) y el
- * detalle (con IVA) de cada factura.
- *
- * Version LEGACY: recorre con bucles {@code for} y depende de que el
- * repositorio devuelva {@code null}.
- */
 @Service
 public class FacturaServicio {
 
@@ -56,19 +49,9 @@ public class FacturaServicio {
     }
 
     /**
-     * Busca facturas de un tipo, emitidas dentro de un rango de fechas
-     * [desde, hasta] (inclusive) y con neto MAYOR a un monto minimo.
      *
      * TODO PASO 4 (Streams): reemplazar el for con los if anidados por una
-     *   cadena de filtros sobre el stream. Cada condicion es un filter:
-     *
-     *       return repositorio.buscarTodas().stream()
-     *               .filter(f -> f.getTipo().equals(tipo))
-     *               .filter(f -> !f.getFecha().isBefore(desde))
-     *               .filter(f -> !f.getFecha().isAfter(hasta))
-     *               .filter(f -> f.getNeto() > montoMinimo)
-     *               .map(this::aResumen)
-     *               .toList();
+     *   cadena de filtros sobre el stream.
      */
     public List<Map<String, Object>> buscar(String tipo, LocalDate desde,
                                             LocalDate hasta, double montoMinimo) {
