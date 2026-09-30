@@ -18,6 +18,4 @@ public interface Factura {
     String getTipo();
 
     LocalDate getFecha();
-
-    double calcularIva();
 }

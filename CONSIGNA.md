@@ -39,9 +39,11 @@ Endpoints (puerto 8080):
    (Recordá: los accessors de un record van sin `get`: `numero()`, no
    `getNumero()`.)
 
-2. **Pattern matching** — Sacá el cálculo del IVA de adentro de las clases y
-   resolvelo por fuera con un `switch` con *pattern matching* sobre el tipo de
-   factura. Empezá con un `default` en el switch.
+2. **Pattern matching** — El IVA se calcula en `FacturaServicio.calcularIva(...)`
+   con una cadena de `if / else if` que compara el nombre de la clase como
+   `String` y castea a mano. Reemplazala por un `switch` con *pattern matching*
+   sobre el tipo de factura (sin `getClass()`, sin comparar Strings y sin casts
+   manuales). Empezá con un `default` en el switch.
 
 3. **Sealed** — Convertí la interface `Factura` en `sealed` (con `permits`).
    Ahora que la jerarquía es cerrada, sacá el `default` del switch: debería
@@ -63,6 +65,7 @@ Endpoints (puerto 8080):
 ## Qué tenés que poder responder al terminar
 
 - ¿Por qué, al agregar `FacturaE`, el compilador te avisó de los lugares a
-  cambiar? ¿Qué habría pasado sin `sealed` + `switch` exhaustivo?
+  cambiar? ¿Qué habría pasado sin `sealed` + `switch` exhaustivo? (Pensá qué
+  hacía la versión original con `if / else` si llegaba una `FacturaE`.)
 - ¿Qué ventaja te da `Optional` frente a devolver `null`?
 - ¿Cuándo conviene pattern matching y cuándo polimorfismo clásico?

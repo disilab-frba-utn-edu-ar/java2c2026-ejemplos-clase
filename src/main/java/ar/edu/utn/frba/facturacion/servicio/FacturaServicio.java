@@ -1,6 +1,8 @@
 package ar.edu.utn.frba.facturacion.servicio;
 
 import ar.edu.utn.frba.facturacion.modelo.Factura;
+import ar.edu.utn.frba.facturacion.modelo.FacturaA;
+import ar.edu.utn.frba.facturacion.modelo.FacturaB;
 import ar.edu.utn.frba.facturacion.repositorio.FacturaRepositorio;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +14,8 @@ import java.util.Map;
 
 @Service
 public class FacturaServicio {
+
+    private static final double ALICUOTA_GENERAL = 0.21;
 
     private final FacturaRepositorio repositorio;
 
@@ -93,8 +97,30 @@ public class FacturaServicio {
 
     private Map<String, Object> aDetalle(Factura factura) {
         Map<String, Object> mapa = aResumen(factura);
-        // TODO PASO 2 (Pattern Matching):
-        mapa.put("iva", factura.calcularIva());
+        mapa.put("iva", calcularIva(factura));
         return mapa;
+    }
+
+    /**
+     * Calcula el IVA segun el tipo de factura (ver tabla en CONSIGNA.md).
+     *
+     * TODO PASO 2 (Pattern Matching): reemplazar la cadena de if/else por un
+     *   switch con pattern matching sobre el tipo de factura.
+     */
+    private double calcularIva(Factura factura) {
+        double iva;
+        if (factura.getClass().getSimpleName().equals("FacturaA")) {
+            FacturaA facturaA = (FacturaA) factura;
+            iva = facturaA.getNeto() * ALICUOTA_GENERAL;
+        } else if (factura.getClass().getSimpleName().equals("FacturaB")) {
+            FacturaB facturaB = (FacturaB) factura;
+            iva = facturaB.getNeto() * ALICUOTA_GENERAL;
+        } else if (factura.getClass().getSimpleName().equals("FacturaC")) {
+            iva = 0.0;
+        } else {
+            throw new IllegalArgumentException(
+                    "Tipo de factura desconocido: " + factura.getClass().getSimpleName());
+        }
+        return iva;
     }
 }

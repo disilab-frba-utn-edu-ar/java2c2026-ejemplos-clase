@@ -39,9 +39,4 @@ public class FacturaC implements Factura {
     public LocalDate getFecha() {
         return fecha;
     }
-
-    @Override
-    public double calcularIva() {
-        return 0.0;
-    }
 }

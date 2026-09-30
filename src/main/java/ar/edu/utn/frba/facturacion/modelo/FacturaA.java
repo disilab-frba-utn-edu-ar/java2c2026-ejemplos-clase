@@ -19,8 +19,6 @@ import java.time.LocalDate;
  */
 public class FacturaA implements Factura {
 
-    private static final double ALICUOTA = 0.21;
-
     private final String numero;
     private final double neto;
     private final String cuitCliente;
@@ -55,10 +53,5 @@ public class FacturaA implements Factura {
 
     public String getCuitCliente() {
         return cuitCliente;
-    }
-
-    @Override
-    public double calcularIva() {
-        return neto * ALICUOTA;
     }
 }
