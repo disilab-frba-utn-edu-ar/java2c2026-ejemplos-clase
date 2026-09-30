@@ -13,9 +13,9 @@ Los alumnos parten de un proyecto **Spring Boot legacy** (esta branch,
 
 | Paso | Feature | Qué se migra |
 |------|---------|--------------|
-| — | *(punto de partida)* | Interface `Factura` + clases `FacturaA/B/C` con polimorfismo |
+| — | *(punto de partida)* | Interface `Factura` + clases `FacturaA/B/C`; el IVA se calcula en el servicio con `if / else if` sobre el nombre de la clase |
 | 1 | **Records** | `FacturaA/B/C` pasan a ser `record` |
-| 2 | **Pattern matching** | El cálculo del IVA sale de las clases a un `switch` |
+| 2 | **Pattern matching** | El `if / else if` con `getClass()` + casts pasa a un `switch` con pattern matching |
 | 3 | **Sealed** | Se sella `Factura`; agregar `FacturaE` **rompe** los `switch` |
 | 4 | **Streams** | El repositorio y el servicio dejan el `for` por streams |
 | 5 | **Optional** | El repositorio deja de devolver `null` |
@@ -68,12 +68,12 @@ Un `record` es inmutable y genera solo el constructor, los *accessors*,
 (`numero()` en vez de `getNumero()`).
 
 Como la interface `Factura` hoy declara `getNumero()`, `getNeto()`,
-`getTipo()` y `calcularIva()`, hay dos caminos didácticos:
+`getTipo()` y `getFecha()`, hay dos caminos didácticos:
 
 - **Recomendado:** aprovechar el paso para *limpiar* la interface. Los
-  accessors del record (`numero()`, `neto()`) cubren los datos, y el
-  `getTipo()`/`calcularIva()` se resuelven aparte (ver Paso 2). La interface
-  queda como un simple marcador de "esto es una Factura".
+  accessors del record (`numero()`, `neto()`, `fecha()`) cubren los datos, y
+  el `getTipo()` se resuelve aparte con pattern matching (ver Paso 2). La
+  interface queda como un simple marcador de "esto es una Factura".
 - Alternativa conservadora: mantener los `getX()` implementándolos a mano
   dentro del record. Sirve para mostrar que un record *también* puede tener
   métodos, pero ensucia el ejemplo.
@@ -99,10 +99,36 @@ refactor del IDE.
 
 ## Paso 2 — Pattern matching (cálculo del IVA)
 
-**Objetivo:** sacar `calcularIva()` de las clases y resolverlo con un
-`switch` con *pattern matching* sobre el tipo de factura.
+**Punto de partida:** el IVA ya se calcula *fuera* de las clases, en
+`FacturaServicio.calcularIva(...)`, pero "a la antigua": una cadena de
+`if / else if` que compara el nombre de la clase como `String` y castea a mano.
 
-Se crea una clase utilitaria (o método estático):
+```java
+if (factura.getClass().getSimpleName().equals("FacturaA")) {
+    FacturaA facturaA = (FacturaA) factura;
+    iva = facturaA.getNeto() * ALICUOTA_GENERAL;
+} else if (factura.getClass().getSimpleName().equals("FacturaB")) {
+    ...
+} else if (factura.getClass().getSimpleName().equals("FacturaC")) {
+    iva = 0.0;
+} else {
+    throw new IllegalArgumentException("Tipo de factura desconocido: ...");
+}
+```
+
+Antes de migrar, conviene preguntarle a la clase qué problemas tiene:
+
+- Comparar el nombre como `String` es frágil: si se renombra la clase o hay
+  un typo, **compila igual** y falla recién en ejecución.
+- Cada rama repite "chequear tipo + castear".
+- Si aparece un tipo nuevo, el compilador no avisa: cae en el `else` y
+  explota en runtime.
+
+**Objetivo:** reemplazar esa cadena por un `switch` con *pattern matching*
+sobre el tipo de factura, sin `getClass()`, sin Strings y sin casts.
+
+En la solución se extrajo a una clase utilitaria (también vale dejarlo como
+método privado del servicio, que es donde está en el legacy):
 
 ```java
 public final class CalculadoraIva {
@@ -124,17 +150,21 @@ public final class CalculadoraIva {
 Puntos para remarcar:
 
 - El `case FacturaA a ->` es *type pattern*: matchea el tipo **y** ya te da
-  la variable tipada `a`. No hace falta castear.
-- Por ahora **hace falta el `default`**: como la interface todavía **no** es
-  sealed, el compilador no puede saber que A/B/C son las únicas. Ese `default`
-  es justamente lo que vamos a poder borrar en el Paso 3.
+  la variable tipada `a`. Reemplaza en una sola línea al
+  `getClass().getSimpleName().equals(...)` + cast del legacy, y lo chequea el
+  compilador (un typo en `FacturaA` ya no compila).
+- El `switch` es una *expresión*: devuelve el IVA directo, sin la variable
+  `iva` auxiliar que se iba asignando en cada rama.
+- Por ahora **hace falta el `default`** (es el equivalente al `else` final
+  del legacy): como la interface todavía **no** es sealed, el compilador no
+  puede saber que A/B/C son las únicas. Ese `default` es justamente lo que
+  vamos a poder borrar en el Paso 3.
 - Se puede agrupar: `case FacturaA a, FacturaB b -> ...` (mismo 21%). Queda a
   criterio si mostrarlo separado (más claro) o agrupado (más DRY).
 
-Se reemplaza la llamada a `factura.calcularIva()` por
-`CalculadoraIva.calcular(factura)` en el servicio (en `aDetalle`, al armar el
-detalle de la factura), y se elimina `calcularIva()` de la interface y de los
-records.
+En `aDetalle` se reemplaza la llamada a `calcularIva(factura)` por
+`CalculadoraIva.calcular(factura)` y se borra el método legacy del servicio
+(o, si se dejó en el servicio, simplemente se reescribe su cuerpo).
 
 Segundo `switch` (opcional, refuerza el paso siguiente): una descripción por
 tipo, que también quedará incompleta al agregar `FacturaE`.
@@ -200,7 +230,9 @@ case FacturaE e -> "Factura E de Exportación"; // en descripcion()
 
 > **Moraleja para la clase:** sin `sealed` + `switch` exhaustivo, agregar
 > `FacturaE` habría pasado silenciosamente por el `default` (IVA calculado
-> mal, o excepción en runtime). Con sealed, el error es en *compilación*: es
+> mal, o excepción en runtime). Es exactamente lo que pasaba con el
+> `if / else if` del legacy: una `FacturaE` caía en el `else` y explotaba
+> recién al pedir su detalle. Con sealed, el error es en *compilación*: es
 > imposible olvidarse un caso.
 
 Recordá sumar una `FacturaE` a los datos semilla del repositorio para verla
