@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Tareas</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 500px; margin: 40px auto; padding: 0 20px; }
+        .completed { text-decoration: line-through; color: gray; }
+        ul { padding-left: 0; list-style: none; }
+        li { display: flex; justify-content: space-between; align-items: center; background: #f4f4f4; margin-bottom: 8px; padding: 10px; border-radius: 4px; }
+        button { background: #ff4d4d; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input[type="text"] { flex: 1; padding: 8px; }
+    </style>
+</head>
+<body>
+
+<h2>Lista de Tareas</h2>
+
+<div class="input-group">
+    <input type="text" id="todoTitle" placeholder="Nueva tarea...">
+    <button onclick="addTodo()" style="background: #28a745;">Agregar</button>
+</div>
+
+<ul id="todoList"></ul>
+
+<script>
+    const API_URL = '/api/todos';
+
+    async function loadTodos() {
+        const res = await fetch(API_URL);
+        const todos = await res.json();
+        const list = document.getElementById('todoList');
+        list.innerHTML = '';
+
+        todos.forEach(todo => {
+            list.innerHTML += `
+                <li>
+                    <span class="${todo.completed ? 'completed' : ''}" onclick="toggleTodo(${todo.id})" style="cursor:pointer;">
+                        ${todo.title}
+                    </span>
+                    <button onclick="deleteTodo(${todo.id})">Eliminar</button>
+                </li>
+            `;
+        });
+    }
+
+    async function addTodo() {
+        const input = document.getElementById('todoTitle');
+        if (!input.value.trim()) return;
+
+        await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: input.value })
+        });
+
+        input.value = '';
+        loadTodos();
+    }
+
+    async function toggleTodo(id) {
+        await fetch(`${API_URL}/${id}/toggle`, { method: 'PATCH' });
+        loadTodos();
+    }
+
+    async function deleteTodo(id) {
+        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        loadTodos();
+    }
+
+    // Cargar tareas al iniciar
+    loadTodos();
+</script>
+</body>
+</html>
