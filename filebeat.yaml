@@ -1,0 +1,23 @@
+filebeat.inputs:
+  - type: container
+    enabled: true
+    paths:
+      # Ruta estándar donde Docker guarda los logs de los contenedores en el host
+      - /var/lib/docker/containers/*/*.log
+    json.keys_under_root: true
+    json.add_error_key: true
+    json.overwrite_keys: true
+    processors:
+      # Opcional pero recomendado: decodifica el JSON que manda tu Spring Boot
+      - decode_json_fields:
+          fields: ["message"]
+          target: ""
+          overwrite_keys: true
+output.elasticsearch:
+  hosts: ["http://elasticsearch-container:9200"]
+  index: "springboot-mi-app-%{+yyyy.MM.dd}"
+
+# Desactiva la necesidad de plantillas estrictas si estás probando localmente
+setup.template.name: "springboot-logs"
+setup.template.pattern: "springboot-logs-*"
+setup.ilm.enabled: false
